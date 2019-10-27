@@ -1,2 +1,2 @@
 # HOTT
-code for our NeurIPS 2019 paper "Hierarchical optimal transport for document
+Code for NeurIPS 2019 paper "Hierarchical Optimal Transport for Document Representation"
