@@ -1,6 +1,6 @@
 import numpy as np
 import lda
-import ot
+from hott import sparse_ot
 
 from sklearn.metrics.pairwise import euclidean_distances
 from scipy.io import loadmat
@@ -161,13 +161,13 @@ def fit_topics(data, embeddings, vocab, K):
 
     return topics, lda_centers, topic_proportions
 
-
 def loader(data_path,
            embeddings_path,
            p=1,
            K_lda=70,
            glove_embeddings=True,
-           stemming=True):
+           stemming=True,
+           n_words_keep = 20):
     """ Load dataset and embeddings from data path."""
     # Load dataset from data_path
     vocab, embed_vocab, bow_data, y = load_wmd_data(data_path)
@@ -182,8 +182,6 @@ def loader(data_path,
         vocab, embed_vocab, bow_data = reduce_vocab(
             bow_data, vocab, embed_vocab, embed_aggregate='mean')
 
-    # Get embedded documents
-    embed_data = get_embedded_data(bow_data, embed_vocab, vocab)
     # Matrix of word embeddings
     embeddings = np.array([embed_vocab[w] for w in vocab])
 
@@ -192,10 +190,17 @@ def loader(data_path,
 
     cost_embeddings = euclidean_distances(embeddings, embeddings) ** p
     cost_topics = np.zeros((topics.shape[0], topics.shape[0]))
+    
+    ## Reduce topics to top-20 words
+    if n_words_keep is not None:
+        for k in range(K_lda):
+            to_0_idx = np.argsort(-topics[k])[n_words_keep:]
+            topics[k][to_0_idx] = 0
 
+        
     for i in range(cost_topics.shape[0]):
         for j in range(i + 1, cost_topics.shape[1]):
-            cost_topics[i, j] = ot.emd2(topics[i], topics[j], cost_embeddings)
+            cost_topics[i, j] = sparse_ot(topics[i], topics[j], cost_embeddings)
     cost_topics = cost_topics + cost_topics.T
 
     out = {'X': bow_data, 'y': y,
