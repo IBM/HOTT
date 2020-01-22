@@ -28,7 +28,7 @@ def knn(X_train, X_test, y_train, y_test, method, C, n_neighbors=7):
         rank = np.argsort(doc_to_train)[:n_neighbors]
 
         # Make prediction based on most popular class among neighbors
-        prediction.append(predict(y_train[rank[:n_neighbors]], n_classes))
+        prediction.append(predict(y_train[rank], n_classes))
 
     # Print and return test error
     test_error = 1 - (prediction == y_test).mean()
